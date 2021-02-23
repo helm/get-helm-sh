@@ -1,7 +1,7 @@
 # get.helm.sh
 
 [![Deploy To
-Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbacongobbler%2Fhelm-infra%2Fmain%2Fazuredeploy.json)
+Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fhelm%2Fget-helm-sh%2Fmain%2Fazuredeploy.json)
 
 These templates deploy and set up https://get.helm.sh.
 
