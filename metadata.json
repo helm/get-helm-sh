@@ -1,0 +1,9 @@
+{
+	"$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+	"type": "QuickStart",
+	"itemDisplayName": "Boot an instance of Helm's CDN backend.",
+	"description": "This template deploys and sets up a customized Helm CDN instance. It includes a storage account, a CDN profile and a custom domain.",
+	"summary": "Deploys a copy of get.helm.sh",
+	"githubUsername": "bacongobbler",
+	"dateUpdated": "2021-02-23"
+}

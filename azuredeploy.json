@@ -1,0 +1,203 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "cdnProfileName": {
+            "defaultValue": "gethelm",
+            "type": "string"
+        },
+        "storageAccountName": {
+            "defaultValue": "gethelm",
+            "type": "string"
+        },
+        "customDomainName": {
+            "defaultValue": "get.helm.sh",
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles",
+            "apiVersion": "2020-04-15",
+            "name": "[parameters('cdnProfileName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Premium_Verizon"
+            },
+            "kind": "cdn",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/endpoints",
+            "apiVersion": "2020-04-15",
+            "name": "[concat(parameters('cdnProfileName'), '/', parameters('cdnProfileName'))]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', parameters('cdnProfileName'))]"
+            ],
+            "properties": {
+                "originHostHeader": "[concat(parameters('storageAccountName'), '.blob.core.windows.net')]",
+                "originPath": "[concat('/', parameters('storageAccountName')]",
+                "contentTypesToCompress": [],
+                "isCompressionEnabled": false,
+                "isHttpAllowed": true,
+                "isHttpsAllowed": true,
+                "queryStringCachingBehavior": "NotSet",
+                "origins": [
+                    {
+                        "name": "[concat(parameters('storageAccountName'), '-blob-core-windows-net')]",
+                        "properties": {
+                            "hostName": "[concat(parameters('storageAccountName'), '.blob.core.windows.net')]",
+                            "httpPort": 80,
+                            "httpsPort": 443
+                        }
+                    }
+                ],
+                "originGroups": [],
+                "geoFilters": [],
+                "urlSigningKeys": []
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('storageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('storageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('storageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('storageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/endpoints/customDomains",
+            "apiVersion": "2020-04-15",
+            "name": "[concat(parameters('cdnProfileName'), '/', parameters('cdnProfileName'), '/get-helm-sh')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/endpoints', parameters('cdnProfileName'), parameters('cdnProfileName'))]",
+                "[resourceId('Microsoft.Cdn/profiles', parameters('cdnProfileName'))]"
+            ],
+            "properties": {
+                "hostName": "[parameters('customDomainName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/endpoints/origins",
+            "apiVersion": "2020-04-15",
+            "name": "[concat(parameters('cdnProfileName'), '/', parameters('cdnProfileName'), '/', parameters('cdnProfileName'), '-blob-core-windows-net')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/endpoints', parameters('cdnProfileName'), parameters('cdnProfileName'))]",
+                "[resourceId('Microsoft.Cdn/profiles', parameters('cdnProfileName'))]"
+            ],
+            "properties": {
+                "hostName": "[concat(parameters('storageAccountName'), '.blob.core.windows.net')]",
+                "httpPort": 80,
+                "httpsPort": 443
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('storageAccountName'), '/default/', parameters('storageAccountName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "Container"
+            }
+        }
+    ]
+}
